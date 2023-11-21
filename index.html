@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Read Data</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <!-- <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-storage.js"></script> -->
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-auth.js"></script>
+    <script src="https://unpkg.com/read-excel-file@4.0.2/bundle/read-excel-file.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="loader" class="center"></div>
+
+    <div id="formStudyPhase" class="bg-body-tertiary p-2">
+        <h2 class="text-center text-primary fw-bold">Production List</h2>
+        
+        <h4 class="fw-bold text-uppercase text-primary text-center">Insert Information</h4>
+        <div class="row justify-content-center my-2">
+            <div class="col-sm-4">
+                <input type="file" class="form-control" id="inputProduction">
+            </div>
+
+        </div>
+        <div class="row justify-content-center my-2">
+
+            <div class="col-md-auto">
+                <button id="uploadProduction" class="btn btn-primary btn-block" >Upload Data</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const input_Production = document.querySelector("#inputProduction");
+        const formStudyPhase = document.querySelector("#formStudyPhase");
+        const loader = document.querySelector("#loader");
+        const uploadProduction = document.querySelector("#uploadProduction");
+        
+        loader.style.display = 'none';
+        uploadProduction.disabled = true;
+        formStudyPhase.style.display = 'block';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDXviEnxOkYf6_0v_QK_At8kiIM3qVItWw",
+            authDomain: "odanp-aead0.firebaseapp.com",
+            databaseURL: "https://odanp-aead0-default-rtdb.firebaseio.com",
+            projectId: "odanp-aead0",
+            storageBucket: "odanp-aead0.appspot.com",
+            messagingSenderId: "943171093140",
+            appId: "1:943171093140:web:d1b6bd20046a4abbf66a81",
+            measurementId: "G-X7N08Z70WQ"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        
+        productList = []
+        input_Production.addEventListener('change',function(){
+            readXlsxFile(input_Production.files[0]).then(function(data){
+                for(var i=2;i<data.length;i++){
+                    productList.push({
+                    poN:data[i][0],
+                    poD:data[i][1],
+                    code:data[i][2],
+                    poQty:data[i][4].toString(),
+                    status:data[i][8],
+                })
+                }
+
+                uploadProduction.disabled = false;
+
+                
+            });
+        })
+        
+
+        uploadProduction.addEventListener('click',insertDataProduction);
+
+        async function insertDataProduction(){
+            
+            if(productList.length>0){
+                loader.style.display = 'block';
+                var currentdate = new Date();
+                var date =  currentdate.getDate() + "/"+ (currentdate.getMonth()+1)  + "/" + currentdate.getFullYear();
+                var time = currentdate.getHours() + ":" + currentdate.getMinutes() + ":" + currentdate.getSeconds();
+                console.log(productList)
+                for(var i=0;i<productList.length;i++){
+                    db.ref("ProductionList/").push().set({
+                        
+                        poN:productList[i].poN,
+                        poD:productList[i].poD,
+                        code:productList[i].code,
+                        poQty:productList[i].poQty,
+                        status:productList[i].status,
+                        date:date,
+                        time:time,
+                        
+                    }).then(()=>{
+                        console.log("Start")
+                        
+
+            
+                        
+                    })
+                }
+                input_Production.value = '';
+                productList = []
+                // uploadProduction.disabled = true;
+                loader.style.display = 'none';
+                // alert("Data added successfully");
+            }else{
+                alert("There Any Data To Upload");
+            }
+        }
+
+
+
+    </script>
+</body>
+</html>
